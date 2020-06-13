@@ -3,319 +3,712 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include <ctime>
+#include <cstdlib>
 
 using namespace std;
 
-void makeRefFile(char*);
-void makeSReadFile(char*, char*, int, int);
-void compareDiff(char*, char*);
+void inititial(string);
+string load(void);
+void generateSuffix(string, int*);
+void sort(string, int*, int);
+void reconstruct(string* s, int** suf, int len);
+void setBWT(char**, int*, int[][2], int*);
+void setTable(char[][1000]);
+string reconstruct(char**, int*, int[][2], int, int*);
+string insertShortRead(string, string, int*, int);
+void printBWT(string, int*);
+void calDiff(string);
 
 int main(void)
 {
-	clock_t start, end;
-	char* reference = new char[1000];
-	char* mySeq = new char[1000];
-	int l;
-	int m;
+	// -----------------------------------
+	// Only use test
+	//string s = "CTAGCATCGAC";
 
-	/*
-	cout << "l 입력 : ";
-	cin >> l;
-	cout << "n 입력 : ";
-	cin >> n;
-	*/
+	//inititial(s);
+	// -----------------------------------
 
-	l = 100; // 열
-	m = 50; // 행
+	// use variable
+	string refString;
+	char* refSequence;
+	int* seqArray;
+	char enter;
 
-	makeRefFile(reference);
-	makeSReadFile(mySeq, reference, l, m);
-	compareDiff(reference, mySeq);
+
+	// -----------------------------------
+	// redy to algorithm
+	refString = load();
+	seqArray = new int[refString.size()];
+	// -----------------------------------
+
+
+	// -----------------------------------
+	// create BWT, pre BWT, sequence array
+	//cout << "Enter를 눌러 BWT, Pre BWT, Array를 만드십시오" << endl;
+	//cin >> enter;
+
+	//generateSuffix(refString, seqArray);
+	//printBWT(refString, seqArray);
+	// -----------------------------------
+
+
+	// -----------------------------------
+	// exact Matching using BWT
+	//cout << "Enter를 눌러 BWT matching을 실행하십시오" << endl;
+	//cin >> enter;
+
+	int table[5][2];
+	int* locationBWT = new int[1000];
+	char** bwt = new char* [2];
+	for (int i = 0; i < 2; i++)
+		bwt[i] = new char[1000];
+
+	//setBWT(bwt, seqArray, table, locationBWT);
+	//refString = reconstruct(bwt, seqArray, table, 100, locationBWT);
+	//calDiff(refString);
+	// -----------------------------------
+
+
+	string arrayPath = "BWT/test.txt";
+	string a = "asdasdasd";
+	ofstream writeFileArray(arrayPath.data());
+	if (writeFileArray.is_open()) {
+		writeFileArray << a;
+		writeFileArray.close();
+	}
+
 
 
 	return 0;
 }
 
-void makeRefFile(char* reference)
+void inititial(string s)
 {
-	// Reference file을 만드는 함수
+	// Only use test
 
-	int temp;
-	char tempList[3]; // 연속한 값을 확인하기 위한 변수
-	int count = 0;
-	string refFilePath = "reference_test.txt";
-
-
-	srand((unsigned int)time(NULL));
-	for (int i = 0; i < 1000; i++)
-	{
-		// 랜덤한 값을 정하고 그 값에 대해 ACGT중 하나를 택함
-
-		int num = rand();
-
-		temp = (int)num % 4; // 랜덤한 레퍼런스의 값을 생성
-
-		// 레퍼런스 값을 문자로 변경하고 저장
-		if (temp == 0)
-		{
-			reference[i] = 'A';
-			tempList[count] = 'A';
-		}
-		else if (temp == 1)
-		{
-			reference[i] = 'C';
-			tempList[count] = 'C';
-		}
-		else if (temp == 2)
-		{
-			reference[i] = 'G';
-			tempList[count] = 'G';
-		}
-		else
-		{
-			reference[i] = 'T';
-			tempList[count] = 'T';
-		}
-		count++;
-
-		if (count > 2)
-		{
-			// 같은 문자에 대해 반복이 계속 나타나지 않게하기 위한 조건문
-
-			count = 0;
-			if (tempList[0] == tempList[1] && tempList[1] == tempList[2])
-			{
-				// count가 4가 되면 이전 값과 연속한 문자를 가지지 못하게 함
-
-				num = rand();
-				temp = (int)num % 3; // 랜덤한 레퍼런스의 값을 생성
-
-				if (tempList[0] == 'A')
-				{
-					// 이전 연속한 값이 A인 경우 실행
-
-					if (temp == 0)
-						reference[i] = 'C';
-					else if (temp == 1)
-						reference[i] = 'G';
-					else
-						reference[i] = 'T';
-				}
-				else if (tempList[0] == 'C')
-				{
-					// 이전 연속한 값이 C인 경우 실행
-
-					if (temp == 0)
-						reference[i] = 'A';
-					else if (temp == 1)
-						reference[i] = 'G';
-					else
-						reference[i] = 'T';
-				}
-				else if (tempList[0] == 'G')
-				{
-					// 이전 연속한 값이 G인 경우 실행
-
-					if (temp == 0)
-						reference[i] = 'A';
-					else if (temp == 1)
-						reference[i] = 'C';
-					else
-						reference[i] = 'T';
-				}
-				else
-				{
-					// 이전 연속한 값이 T인 경우 실행
-
-					if (temp == 0)
-						reference[i] = 'A';
-					else if (temp == 1)
-						reference[i] = 'C';
-					else
-						reference[i] = 'G';
-				}
-			}
-		}
-	}
+	string refFilePath = "BWT/sequence.txt";
+	int len = s.size();
 
 	// write File
 	ofstream writeFile(refFilePath.data());
 	if (writeFile.is_open()) {
-		for (int i = 0; i < 1000; i++)
-			writeFile << reference[i];
+		for (int i = 0; i < len; i++)
+			writeFile << s[i];
 
 		writeFile.close();
 	}
 }
 
-
-void makeSReadFile(char* mySeq, char* reference, int l, int m)
+string load(void)
 {
-	// my DNA file을 만들기 위한 함수
-	// Reference DNA와 전체 20%가 다르게 만들어짐
+	string line;
+	string refFilePath = "reference_test.txt";
 
-	int temp;
-	int check = 1;
-	int* tempList = new int[1000]; // 이미 한 번 이상 조회했는지 알려주는 변수
-	string refFilePath = "reference.txt";
-	string shortRdFilePath = "shortRead_test.txt";
-	string originFilePath = "mySequence_snp_1.0_test.txt";
-
-	char** tempMySeq; // 파일에 쓸 때 사용하는 변수
-	tempMySeq = new char* [m];
-
-	for (int i = 0; i < m; i++)
-		tempMySeq[i] = new char[l];
-
-	for (int i = 0; i < 1000; i++)
-		tempList[i] = 0;
-
-	/*
 	// read File
 	ifstream openFile(refFilePath.data());
 	if (openFile.is_open()) {
-		string line;
-		while (getline(openFile, line))
-			openFile.close();
-		strcpy(reference, line.c_str());
-	}*/
-	/*
-	ifstream openFile2(originFilePath.data());
-	if (openFile2.is_open()) {
-		string line;
-		while (getline(openFile2, line))
-			openFile2.close();
-		strcpy(mySeq, line.c_str());
-	}*/
+		while (getline(openFile, line));
+		line.append(1, '$');
+
+		openFile.close();
+	}
+
+	return line;
+}
+
+void generateSuffix(string refString, int* seqArray)
+{
+	// bwt를 만들기 위한 suffixes를 만드는 함수
+
+	char stTemp;
+	string suffixPath = "BWT/suffix.txt";
+	string arrayPath = "BWT/array.txt";
+	string openSufArrayFile = "BWT/sufarray.txt";
+	int len = refString.size();
+	int count = 0;
+	int tempSeq;
+	int temp;
+	int* tempArr = new int[refString.size()];
 
 
-	srand((unsigned int)time(NULL));
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < len; i++)
 	{
-		// reference의 염기서열을 1.0%확률로 랜덤한 다른 염기로 바꾸는 절
-		// 바뀐 염기서열은 my DNA의 염기서열로 들어감
+		string tempSequence;
 
-		int num = rand();
-		temp = (int)num % 1000; // 확률 계산을 위해 랜덤 값 생성
-
-		if (temp < 10)
+		if (i)
 		{
-			// 0.1%의 확률로 염기서열을 바꿈
+			// read File
+			ifstream openArrayFile(arrayPath.data());
+			if (openArrayFile.is_open()) {
+				string line;
+				int con = 0;
+				while (getline(openArrayFile, line))
+				{
+					seqArray[con] = atoi(line.c_str());
+					con++;
+				}
+				openArrayFile.close();
+			}
+			// read File
+			ifstream openSufArrayFile(openSufArrayFile.data());
+			if (openSufArrayFile.is_open()) {
+				string line;
+				int con = 0;
+				while (getline(openSufArrayFile, line))
+				{
+					tempArr[con] = atoi(line.c_str());
+					con++;
+				}
+				openSufArrayFile.close();
+			}
+			// read File
+			ifstream openFile(suffixPath.data());
+			if (openFile.is_open()) {
+				string line;
+				while (getline(openFile, line))
+					tempSequence.append(1, line[len - i - 1]);
+				openFile.close();
+			}
 
-			// 레퍼런스 값을 문자로 변경하고 저장
-			if (reference[i] == 'A')
+			for (int j = 0; j < i; j++)
 			{
-				// A의 문자였다면 A를 T로 변경
-				mySeq[i] = 'T';
+				if (seqArray[j] != tempArr[j])
+				{
+					for (int k = 0; k < i; k++)
+					{
+						if (seqArray[j] == tempArr[k])
+						{
+							stTemp = tempSequence[k];
+							tempSequence[k] = tempSequence[j];
+							tempSequence[j] = stTemp;
+
+							temp = tempArr[k];
+							tempArr[k] = tempArr[j];
+							tempArr[j] = temp;
+
+							break;
+						}
+					}
+				}
 			}
-			else if (reference[i] == 'C')
+
+			sort(tempSequence, seqArray, i);
+
+			seqArray[i] = i;
+			tempSeq = i;
+		}
+		else
+		{
+			seqArray[i] = i;
+			tempSeq = i;
+		}
+
+
+		// write File
+		ofstream writeFile(suffixPath.data(), ios::app);
+		if (writeFile.is_open()) {
+			for (int j = i; j < len; j++)
 			{
-				// C의 문자였다면 C를 G로 변경
-				mySeq[i] = 'G';
+				writeFile << refString[j];
 			}
-			else if (reference[i] == 'G')
+
+			if (i > 0)
 			{
-				// G의 문자였다면 G를 C로 변경
-				mySeq[i] = 'C';
+				writeFile << refString[i - 1]; // BWT 저장
 			}
 			else
 			{
-				// T의 문자였다면 T를 A로 변경
-				mySeq[i] = 'A';
+				writeFile << refString[len - 1]; // BWT 저장
 			}
+			writeFile << endl;
+			writeFile.close();
 		}
-		else
-			mySeq[i] = reference[i];
-	}
+		// write File
+		ofstream writeFileArray(arrayPath.data());
+		if (writeFileArray.is_open()) {
+			for (int j = 0; j <= i; j++)
+			{
+				writeFileArray << seqArray[j];
+				writeFileArray << endl;
+			}
 
-	cout << "Snip complete" << endl;
-	for (int i = 0; i < m; i++)
+			writeFileArray.close();
+		}
+		// write File
+		ofstream writeSufFileArray(openSufArrayFile.data(), ios::app);
+		if (writeSufFileArray.is_open()) {
+			writeSufFileArray << tempSeq;
+			writeSufFileArray << endl;
+
+			writeSufFileArray.close();
+		}
+	}
+}
+
+void sort(string tempSequence, int* seqArray, int n)
+{
+	// bwt를 만들기 위해 sort하는 함수
+	// 계수정렬 사용
+
+	int countArr[4];
+	int temp;
+	int tempSeq;
+	int* tempArr = new int[n];
+
+	for (int i = 0; i < 4; i++)
+		countArr[i] = 0; // 초기화
+	for (int i = 0; i < n; i++)
 	{
-		// m개의 short read를 만드는 절
+		if (tempSequence[i] == 'A')
+			countArr[0]++;
+		else if (tempSequence[i] == 'C')
+			countArr[1]++;
+		else if (tempSequence[i] == 'G')
+			countArr[2]++;
+		else
+			countArr[3]++;
+	}
+	for (int i = 1; i < 4; i++)
+		countArr[i] = countArr[i] + countArr[i - 1]; // 누적합
+	for (int i = 0; i < n; i++)
+	{
+		if (tempSequence[i] == 'A')
+			tempSeq = 0;
+		else if (tempSequence[i] == 'C')
+			tempSeq = 1;
+		else if (tempSequence[i] == 'G')
+			tempSeq = 2;
+		else
+			tempSeq = 3;
 
-		int num = rand();
-		temp = (int)num % (1000 - l + 1); // 확률 계산을 위해 랜덤 값 생성
-		if (tempList[temp] == 1)
-		{
-			// 이미 조회한 곳이라면 2칸 띈 위치부터 샘플링 하도록 하는 절
-			if (temp < 1000 - l - 1)
-				temp += 2;
-		}
+		tempArr[n - countArr[tempSeq]] = seqArray[i];
+		countArr[tempSeq]--;
+	}
 
-		for (int j = 0; j < l; j++)
-		{
-			// l길이의 short read를 만드는 절
+	for (int i = 0; i < n; i++)
+		seqArray[i] = tempArr[i];
+}
 
-			tempMySeq[i][j] = mySeq[temp + j];
-			tempList[temp + j] = 1;
-		}
+string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int* locationBWT)
+{
+	// 문자열을 복원하기 위한 함수
+
+	string refFilePath = "reference_test.txt";
+	string shortReadPath = "shortRead_test.txt";
+	string reference;
+	int check;
+
+	// read reference File
+	ifstream openFile(refFilePath.data());
+	if (openFile.is_open()) {
+		while (getline(openFile, reference));
+		openFile.close();
 	}
 
 
-	// write origin File
-	ofstream writeFile(originFilePath.data());
-	if (writeFile.is_open()) {
-		for (int i = 0; i < 1000; i++)
-			writeFile << mySeq[i];
-
-		writeFile.close();
-	}
-
-	// write short read File
-	ofstream writeFile2(shortRdFilePath.data());
-	if (writeFile2.is_open()) {
-		for (int i = 0; i < m; i++)
+	// read shortRead File
+	ifstream openSRFile(shortReadPath.data());
+	string line;
+	if (openSRFile.is_open()) {
+		while (getline(openSRFile, line))
 		{
-			for (int j = 0; j < l; j++)
-				writeFile2 << tempMySeq[i][j];
-			writeFile2 << endl;
-		}
+			int fcon = 1;
+			int econ = 1;
+			int succe = -1;
+			int front, end;
+			int frontNext = -1;
+			int endNext = -1;
+			int missmatch[2] = { 0, 0 };
 
-		writeFile2.close();
+
+			if (line[shortLen - 1] == '$')
+				check = 0;
+			else if (line[shortLen - 1] == 'A')
+				check = 1;
+			else if (line[shortLen - 1] == 'C')
+				check = 2;
+			else if (line[shortLen - 1] == 'G')
+				check = 3;
+			else
+				check = 4;
+
+			front = table[check][0];
+			end = table[check][1];
+			while (1)
+			{
+				if (end - front < 0)
+					if (frontNext == -1 && endNext == -1)
+						break;
+
+
+				if (front <= end || frontNext != -1)
+				{
+					// front 실행 구문
+					if (shortLen - fcon >= 0)
+					{
+						if (frontNext == -1)
+						{
+							frontNext = locationBWT[front];
+						}
+						else
+						{
+							if (bwt[0][frontNext] == '$')
+							{
+								fcon = 0;
+								front++;
+								frontNext = -1;
+								missmatch[0] = 0;
+							}
+							else
+							{
+								if (bwt[0][frontNext] == line[shortLen - fcon])
+								{
+									if (shortLen - fcon == 0)
+									{
+										// 레퍼런스에서 찾기 성공
+
+										succe = frontNext;
+
+										break;
+									}
+
+									frontNext = locationBWT[frontNext];
+								}
+								else
+								{
+									missmatch[0]++;
+
+									if (missmatch[0] > 3)
+									{
+										// miss match 개수 3개까지 허용함
+
+										fcon = 0;
+										front++;
+										frontNext = -1;
+										missmatch[0] = 0;
+									}
+									else
+									{
+										if (shortLen - fcon == 0)
+										{
+											// 레퍼런스에서 찾기 성공
+
+											succe = frontNext;
+
+											break;
+										}
+
+										frontNext = locationBWT[frontNext];
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						fcon = 0;
+						front++;
+						frontNext = -1;
+						missmatch[0] = 0;
+					}
+
+					fcon++;
+				}
+
+				if (end >= front || endNext != -1)
+				{
+					// end 실행 구문
+					if (shortLen - econ >= 0)
+					{
+						if (endNext == -1)
+						{
+							endNext = locationBWT[end];
+						}
+						else
+						{
+							if (bwt[0][endNext] == '$')
+							{
+								econ = 0;
+								end--;
+								endNext = -1;
+								missmatch[1] = 0;
+							}
+							else
+							{
+								if (bwt[0][endNext] == line[shortLen - econ])
+								{
+									if (shortLen - econ == 0)
+									{
+										// 레퍼런스에서 찾기 성공
+
+										succe = endNext;
+
+										break;
+									}
+
+									endNext = locationBWT[endNext];
+								}
+								else
+								{
+									missmatch[1]++;
+
+									if (missmatch[1] > 3)
+									{
+										// miss match 개수 3개까지 허용함
+
+										econ = 0;
+										end--;
+										endNext = -1;
+										missmatch[1] = 0;
+									}
+									else
+									{
+										if (shortLen - econ == 0)
+										{
+											// 레퍼런스에서 찾기 성공
+
+											succe = endNext;
+
+											break;
+										}
+
+										endNext = locationBWT[endNext];
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						econ = 0;
+						end--;
+						endNext = -1;
+						missmatch[1] = 0;
+					}
+
+					econ++;
+				}
+			}
+			// 여기다가 레퍼런스에 삽입하는 함수 만듦
+			reference = insertShortRead(reference, line, seqArray, succe);
+		}
+		openSRFile.close();
 	}
 
-	delete[] tempList;
-	for (int i = 0; i < m; i++)
-		delete[] tempMySeq[i];
-	delete[] tempMySeq;
+	return reference;
+}
+
+void setBWT(char** bwt, int* seqArray, int table[][2], int* locationBWT)
+{
+	string arrayPath = "BWT/array.txt";
+	string BWTPath = "BWT/bwt.txt";
+	string PreBWTPath = "BWT/pre_bwt.txt";
+
+
+	cout << "File 읽기 시작" << endl;
+	// read array File
+	ifstream openFileArray(arrayPath.data());
+	if (openFileArray.is_open()) {
+		string line;
+		int con = 1000;
+		while (getline(openFileArray, line))
+		{
+			seqArray[con] = atoi(line.c_str());
+			con--;
+		}
+		openFileArray.close();
+	}
+	cout << "Array 읽기 완료" << endl;
+
+	// read pre BWT File
+	ifstream openFilePreBWT(PreBWTPath.data());
+	if (openFilePreBWT.is_open()) {
+		string line;
+		int con = 0;
+		int temp = 0;
+		while (getline(openFilePreBWT, line))
+		{
+			bwt[0][con] = line[0];
+
+			if (con)
+			{
+				if (bwt[0][con - 1] != bwt[0][con])
+				{
+					table[temp][0] = con;
+					if (temp < 5)
+					{
+						table[temp - 1][1] = con - 1;
+						temp++;
+					}
+				}
+			}
+			else
+			{
+				// table 초기 셋팅
+				// pre train의 첫 줄은 무조건 $ 임
+				table[temp][0] = 0;
+				temp++;
+			}
+			con++;
+		}
+		table[temp - 1][1] = con - 1;
+		openFilePreBWT.close();
+	}
+	cout << "BWT 읽기 완료" << endl;
+
+	// read BWT File
+	ifstream openFileBWT(BWTPath.data());
+	if (openFileBWT.is_open()) {
+		string line;
+		int con = 0;
+		int temp_0 = table[0][0];
+		int temp_A = table[1][0];
+		int temp_C = table[2][0];
+		int temp_G = table[3][0];
+		int temp_T = table[4][0];
+		while (getline(openFileBWT, line))
+		{
+			bwt[1][con] = line[0];
+
+			// 각 위치를 잡아주는 절
+			if (bwt[1][con] == '$')
+			{
+				locationBWT[con] = temp_0;
+				temp_0++;
+			}
+			else if (bwt[1][con] == 'A')
+			{
+				locationBWT[con] = temp_A;
+				temp_A++;
+			}
+			else if (bwt[1][con] == 'C')
+			{
+				locationBWT[con] = temp_C;
+				temp_C++;
+			}
+			else if (bwt[1][con] == 'G')
+			{
+				locationBWT[con] = temp_G;
+				temp_G++;
+			}
+			else
+			{
+				locationBWT[con] = temp_T;
+				temp_T++;
+			}
+
+			con++;
+		}
+		openFileBWT.close();
+	}
+	cout << "Pre BWT 읽기 완료" << endl;
 }
 
 
-
-void compareDiff(char* ref, char* mySeq)
+string insertShortRead(string reference, string shortRd, int* seqArray, int succe)
 {
-	string refFilePath = "reference_test.txt";
-	string originFilePath = "shortRead_test.txt";
-	int count = 0;
+	// 레퍼런스에 short read 삽입하는 함수
 
+	if (succe == -1)
+		return reference;
+
+	int len = reference.size();
+	int locate = seqArray[succe];
+
+
+	for (int i = 0; i < shortRd.size(); i++)
+	{
+		if (locate + i >= len)
+			break;
+
+		reference[locate + i] = shortRd[i];
+	}
+
+	return reference;
+}
+
+
+void printBWT(string tempSequence, int* seqArray)
+{
+	// BWT를 save하는 함수
+	int len = tempSequence.size();
+
+	string bwt;
+	string preBwt;
+	string suffixPath = "BWT/suffix.txt";
+	string arrayPath = "BWT/array.txt";
+	string BWTPath = "BWT/bwt.txt";
+	string PreBWTPath = "BWT/pre_bwt.txt";
 
 	// read File
-	ifstream openFile(refFilePath.data());
+	ifstream openArrayFile(arrayPath.data());
+	if (openArrayFile.is_open()) {
+		string line;
+		int con = 0;
+		while (getline(openArrayFile, line))
+		{
+			seqArray[con] = atoi(line.c_str());
+			con++;
+		}
+		openArrayFile.close();
+	}
+
+	// read File
+	ifstream openFile(suffixPath.data());
 	if (openFile.is_open()) {
 		string line;
+		int con = 0;
 		while (getline(openFile, line))
-			openFile.close();
-		strcpy(ref, line.c_str());
-	}
-
-	ifstream openFile2(originFilePath.data());
-	if (openFile2.is_open()) {
-		string line;
-		while (getline(openFile2, line))
-			openFile2.close();
-		strcpy(mySeq, line.c_str());
-	}
-
-	for (int i = 0; i < 1000; i++)
-	{
-		// my DNA와 trivial결과의 유사도를 계산하는 절
-
-		if (mySeq[i] == ref[i])
 		{
-			count++;
+			bwt.append(1, line[len - con]);
+			preBwt.append(1, line[0]);
+			con++;
 		}
+		openFile.close();
 	}
 
-	cout << "My DNA와 Reference의 일치율 : " << float(count) / 1000 * 100 << "%" << endl;
+	// write BWT File
+	ofstream writeBWT(BWTPath.data());
+	if (writeBWT.is_open()) {
+		for (int i = len - 1; i >= 0; i--)
+		{
+			writeBWT << bwt[seqArray[i]];
+			writeBWT << endl;
+		}
+		writeBWT.close();
+	}
+	// write PreBWT File
+	ofstream writeSufPreBWT(PreBWTPath.data(), ios::app);
+	if (writeSufPreBWT.is_open()) {
+		for (int i = len - 1; i >= 0; i--)
+		{
+			writeSufPreBWT << preBwt[seqArray[i]];
+			writeSufPreBWT << endl;
+		}
+		writeSufPreBWT.close();
+	}
+}
+
+void calDiff(string reference)
+{
+	string mySeqPath = "mySequence_snp_1.0_test.txt";
+	string mySeq;
+
+	int count = 0;
+
+	// read File
+	ifstream openFile(mySeqPath.data());
+	if (openFile.is_open()) {
+		while (getline(openFile, mySeq));
+		openFile.close();
+	}
+
+
+	for (int i = 0; i < reference.size(); i++)
+	{
+		if (reference[i] == mySeq[i])
+			count++;
+	}
+
+	cout << "My DNA와 복원한 값의 일치율 : " << float(count) / reference.size() * 100 << "%" << endl;
 }
