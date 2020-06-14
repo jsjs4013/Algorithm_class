@@ -22,7 +22,7 @@ void calDiff(string);
 
 
 // 복원시킬 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 100000;
+int changeDataNum = 1000000;
 
 
 int main(void)
@@ -47,7 +47,7 @@ int main(void)
 	// use variable
 	string refString;
 	int* seqArray;
-	int col = 1000; // 열
+	int col = 50; // 열
 
 	refString = load();
 	seqArray = new int[refString.size()];
@@ -109,7 +109,7 @@ void inititial(string s)
 string load(void)
 {
 	string line;
-	string refFilePath = "reference_test.txt";
+	string refFilePath = "reference_1000000.txt";
 
 	// read File
 	ifstream openFile(refFilePath.data());
@@ -243,8 +243,8 @@ string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int*
 {
 	// 문자열을 복원하기 위한 함수
 
-	string refFilePath = "reference_test.txt";
-	string shortReadPath = "shortRead_test.txt";
+	string refFilePath = "reference_1000000.txt";
+	string shortReadPath = "shortRead_30000.txt";
 	string reference;
 	int check;
 
@@ -649,7 +649,8 @@ void printBWT(string tempSequence, int* seqArray)
 
 void calDiff(string reference)
 {
-	string mySeqPath = "mySequence_snp_1.0_test.txt";
+	string mySeqPath = "mySequence_snp_10.0.txt";
+	string myDNAPath = "BWT/Reconstruction.txt";
 	string mySeq;
 
 	int count = 0;
@@ -669,4 +670,14 @@ void calDiff(string reference)
 	}
 
 	cout << "My DNA와 복원한 값의 일치율 : " << float(count) / reference.size() * 100 << "%" << endl;
+
+
+
+	// write MyDNA File
+	ofstream writeSufPreBWT(myDNAPath.data());
+	if (writeSufPreBWT.is_open())
+	{
+		writeSufPreBWT << reference;
+		writeSufPreBWT.close();
+	}
 }
