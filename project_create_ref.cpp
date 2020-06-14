@@ -11,11 +11,14 @@ void makeRefFile(char*);
 void makeSReadFile(char*, char*, int, int);
 void compareDiff(char*, char*);
 
+// 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
+int changeDataNum = 100000;
+
 int main(void)
 {
 	clock_t start, end;
-	char* reference = new char[1000];
-	char* mySeq = new char[1000];
+	char* reference = new char[changeDataNum];
+	char* mySeq = new char[changeDataNum];
 	int l;
 	int m;
 
@@ -26,8 +29,8 @@ int main(void)
 	cin >> n;
 	*/
 
-	l = 100; // 열
-	m = 50; // 행
+	l = 1000; // 열
+	m = 1000; // 행
 
 	makeRefFile(reference);
 	makeSReadFile(mySeq, reference, l, m);
@@ -48,7 +51,7 @@ void makeRefFile(char* reference)
 
 
 	srand((unsigned int)time(NULL));
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < changeDataNum; i++)
 	{
 		// 랜덤한 값을 정하고 그 값에 대해 ACGT중 하나를 택함
 
@@ -142,7 +145,7 @@ void makeRefFile(char* reference)
 	// write File
 	ofstream writeFile(refFilePath.data());
 	if (writeFile.is_open()) {
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < changeDataNum; i++)
 			writeFile << reference[i];
 
 		writeFile.close();
@@ -157,7 +160,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 
 	int temp;
 	int check = 1;
-	int* tempList = new int[1000]; // 이미 한 번 이상 조회했는지 알려주는 변수
+	int* tempList = new int[changeDataNum]; // 이미 한 번 이상 조회했는지 알려주는 변수
 	string refFilePath = "reference.txt";
 	string shortRdFilePath = "shortRead_test.txt";
 	string originFilePath = "mySequence_snp_1.0_test.txt";
@@ -168,7 +171,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 	for (int i = 0; i < m; i++)
 		tempMySeq[i] = new char[l];
 
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < changeDataNum; i++)
 		tempList[i] = 0;
 
 	/*
@@ -191,7 +194,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 
 
 	srand((unsigned int)time(NULL));
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < changeDataNum; i++)
 	{
 		// reference의 염기서열을 1.0%확률로 랜덤한 다른 염기로 바꾸는 절
 		// 바뀐 염기서열은 my DNA의 염기서열로 들어감
@@ -235,11 +238,11 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 		// m개의 short read를 만드는 절
 
 		int num = rand();
-		temp = (int)num % (1000 - l + 1); // 확률 계산을 위해 랜덤 값 생성
+		temp = (int)num % (changeDataNum - l + 1); // 확률 계산을 위해 랜덤 값 생성
 		if (tempList[temp] == 1)
 		{
 			// 이미 조회한 곳이라면 2칸 띈 위치부터 샘플링 하도록 하는 절
-			if (temp < 1000 - l - 1)
+			if (temp < changeDataNum - l - 1)
 				temp += 2;
 		}
 
@@ -256,7 +259,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 	// write origin File
 	ofstream writeFile(originFilePath.data());
 	if (writeFile.is_open()) {
-		for (int i = 0; i < 1000; i++)
+		for (int i = 0; i < changeDataNum; i++)
 			writeFile << mySeq[i];
 
 		writeFile.close();
@@ -307,7 +310,7 @@ void compareDiff(char* ref, char* mySeq)
 		strcpy(mySeq, line.c_str());
 	}
 
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < changeDataNum; i++)
 	{
 		// my DNA와 trivial결과의 유사도를 계산하는 절
 
@@ -317,5 +320,5 @@ void compareDiff(char* ref, char* mySeq)
 		}
 	}
 
-	cout << "My DNA와 Reference의 일치율 : " << float(count) / 1000 * 100 << "%" << endl;
+	cout << "My DNA와 Reference의 일치율 : " << float(count) / changeDataNum * 100 << "%" << endl;
 }
