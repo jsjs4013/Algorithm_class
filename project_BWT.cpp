@@ -11,7 +11,7 @@ using namespace std;
 void inititial(string);
 string load(void);
 void generateSuffix(string, int*);
-void sort(char*, int*, int);
+void sort(string, int*, int, int);
 void reconstruct(string* s, int** suf, int len);
 void setBWT(char**, int*, int[][2], int*);
 void setTable(char[][1000]);
@@ -34,7 +34,7 @@ int main(void)
 	// -----------------------------------
 	// Only use test
 
-	//string s = "ACAACG";
+	//string s = "CTAGCATGGAC";
 
 	//s.append(1, '$');
 	//inititial(s);
@@ -133,9 +133,8 @@ void generateSuffix(string refString, int* seqArray)
 
 	int len = refString.size();
 
-	char* tempSequence = new char[len];
 
-
+	// Suffix 비슷한거 만드는 부분
 	cout << "Make Suffix" << endl;
 	for (int i = 0; i < len; i++)
 	{
@@ -160,7 +159,8 @@ void generateSuffix(string refString, int* seqArray)
 	}
 	cout << "Make Suffix Done" << endl;
 
-	// read File
+
+	// 위에서 만든 파일의 첫 줄을 읽음
 	ifstream openFile(suffixPath.data());
 	if (openFile.is_open()) {
 		while (getline(openFile, suffix))
@@ -171,19 +171,13 @@ void generateSuffix(string refString, int* seqArray)
 	}
 
 
+	// 계수정렬을 사용한 기수정렬을 기반으로 suffix matrix 없이 bwt와 pre bwt를 만듦
 	for (int i = 0; i < len; i++)
 	{
 		if (i)
-		{
-			for (int j = 0; j < i; j++)
-				tempSequence[j] = suffix[(len - 1 - i) + seqArray[j]];
+			sort(suffix, seqArray, i, len);
 
-			sort(tempSequence, seqArray, i);
-
-			seqArray[i] = i;
-		}
-		else
-			seqArray[i] = i;
+		seqArray[i] = i;
 	}
 
 	// write File
@@ -197,11 +191,9 @@ void generateSuffix(string refString, int* seqArray)
 
 		writeFileArray.close();
 	}
-
-	delete[] tempSequence;
 }
 
-void sort(char* tempSequence, int* seqArray, int n)
+void sort(string tempSequence, int* seqArray, int n, int len)
 {
 	// bwt를 만들기 위해 sort하는 함수
 	// 계수정렬 사용
@@ -215,11 +207,11 @@ void sort(char* tempSequence, int* seqArray, int n)
 		countArr[i] = 0; // 초기화
 	for (int i = 0; i < n; i++)
 	{
-		if (tempSequence[i] == 'A')
+		if (tempSequence[(len - n - 1) + seqArray[i]] == 'A')
 			countArr[0]++;
-		else if (tempSequence[i] == 'C')
+		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'C')
 			countArr[1]++;
-		else if (tempSequence[i] == 'G')
+		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'G')
 			countArr[2]++;
 		else
 			countArr[3]++;
@@ -228,11 +220,11 @@ void sort(char* tempSequence, int* seqArray, int n)
 		countArr[i] = countArr[i] + countArr[i - 1]; // 누적합
 	for (int i = 0; i < n; i++)
 	{
-		if (tempSequence[i] == 'A')
+		if (tempSequence[(len - n - 1) + seqArray[i]] == 'A')
 			tempSeq = 0;
-		else if (tempSequence[i] == 'C')
+		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'C')
 			tempSeq = 1;
-		else if (tempSequence[i] == 'G')
+		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'G')
 			tempSeq = 2;
 		else
 			tempSeq = 3;
