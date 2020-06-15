@@ -5,13 +5,20 @@
 #include <fstream>
 #include <cstdlib>
 #include <time.h>
+#include <algorithm>
+#include<vector>
 
 using namespace std;
+
+
+bool cmp(int i, int j);
+void constructSA();
 
 void inititial(string);
 string load(void);
 void generateSuffix(string, int*);
-void sort(string, int*, int, int);
+void sort(int k, vector<int>& perm, vector<int>& group);
+void findSuffixArr(string& refString, int* seqArray);
 void reconstruct(string* s, int** suf, int len);
 void setBWT(char**, int*, int[][2], int*);
 void setTable(char[][1000]);
@@ -21,8 +28,9 @@ void printBWT(string, int*);
 void calDiff(string);
 
 
+
 // 복원시킬 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 1000000;
+int changeDataNum = 500000;
 
 
 int main(void)
@@ -34,10 +42,15 @@ int main(void)
 	// -----------------------------------
 	// Only use test
 
-	//string s = "CTAGCATGGAC";
+	//string refString = "ACAACG";
 
-	//s.append(1, '$');
-	//inititial(s);
+	//refString.append(1, '$');
+	//inititial(S);
+
+	//S = "ACAACG$";
+	//constructSA();
+	//for (int i = 0; i < N; i++)
+	//	printf("%d ", sa[i]); 
 	// -----------------------------------
 
 
@@ -89,6 +102,98 @@ int main(void)
 	return 0;
 }
 
+
+
+
+void sort(int k, vector<int>& perm, vector<int>& group)
+{
+	// 첫 k 글자를 기준으로 매겨진 group 번호를 이용하여 접미사 배열을 계수 정렬한다.
+
+	int n = perm.size();
+
+	// 계수 정렬시 사용하는 bucket의 범위
+	// 첫 group 번호는 문자의 아스키 코드를 이용하므로 char의 최댓값을 담을 수 있어야 하고,
+	// 그 이후에는 0번부터 최대 n-1까지 매겨질 수 있으므로 이에 맞게 range를 잡는다.
+	int range = max(n, (int)numeric_limits<char>::max());
+
+	vector<int> cnt(range + 1, 0);
+	for (int i = 0; i < n; i++)
+	{
+		if (i + k < n)
+			cnt[group[i + k]]++;
+		else
+			cnt[0]++;
+	}
+
+	for (int i = 1; i <= range; i++)
+	{
+		cnt[i] += cnt[i - 1];
+	}
+
+	vector<int> newPerm(n);
+	for (int i = n - 1; i >= 0; i--)
+	{
+		if (perm[i] + k < n)
+			newPerm[--cnt[group[perm[i] + k]]] = perm[i];
+		else
+			newPerm[--cnt[0]] = perm[i];
+	}
+	swap(perm, newPerm);
+}
+
+
+void findSuffixArr(string& refString, int* seqArray)
+{
+	// 문자열 s의 접미사 배열을 반환함
+
+	int len = refString.size();
+
+	// 접미사 배열, 각 접미사의 시작 위치를 저장하는 순열로 볼 수 있다.
+	vector<int> perm(len);
+	for (int i = 0; i < len; i++)
+	{
+		perm[i] = i;
+	}
+
+	// 각 접미사들의 첫 k 글자를 기준으로 매겨진 group 번호
+	// 첫 k 글자가 사전상 앞에 있을 수록 상대적으로 낮은 번호를 부여한다.
+	vector<int> group(len + 1);
+	for (int i = 0; i < len; i++)
+	{
+		group[i] = refString[i];
+	}
+
+	// 각 접미사를 첫 2, 4, 8, ... 글자를 기준으로 O(lg n)번 정렬한다.
+	for (int k = 1; k < len; k *= 2)
+	{
+		sort(k, perm, group); // 첫 [k ~ 2*k) 글자를 기준으로 정렬
+		sort(0, perm, group); // 첫 [0 ~ k) 글자를 기준으로 정렬
+
+		// group 번호를 갱신한다.
+		vector<int> newGroup(len + 1); // 새 group 번호 (임시 배열)
+		newGroup[perm[0]] = 0;
+		for (int i = 1; i < len; i++)
+		{
+			if (group[perm[i]] == group[perm[i - 1]] && group[perm[i] + k] == group[perm[i - 1] + k])
+				newGroup[perm[i]] = newGroup[perm[i - 1]];
+			else
+				newGroup[perm[i]] = newGroup[perm[i - 1]] + 1;
+		}
+
+		swap(group, newGroup);
+
+		if (group[perm[len - 1]] == len - 1) break; // 최적화
+	}
+
+
+	for (int i = len - 1; i >= 0; i--)
+		seqArray[i] = perm[len - 1 - i];
+}
+
+
+
+
+
 void inititial(string s)
 {
 	// Only use test
@@ -109,7 +214,7 @@ void inititial(string s)
 string load(void)
 {
 	string line;
-	string refFilePath = "reference_1000000.txt";
+	string refFilePath = "reference_500000.txt";
 
 	// read File
 	ifstream openFile(refFilePath.data());
@@ -160,25 +265,7 @@ void generateSuffix(string refString, int* seqArray)
 	cout << "Make Suffix Done" << endl;
 
 
-	// 위에서 만든 파일의 첫 줄을 읽음
-	ifstream openFile(suffixPath.data());
-	if (openFile.is_open()) {
-		while (getline(openFile, suffix))
-		{
-			break;
-		}
-		openFile.close();
-	}
-
-
-	// 계수정렬을 사용한 기수정렬을 기반으로 suffix matrix 없이 bwt와 pre bwt를 만듦
-	for (int i = 0; i < len; i++)
-	{
-		if (i)
-			sort(suffix, seqArray, i, len);
-
-		seqArray[i] = i;
-	}
+	findSuffixArr(refString, seqArray);
 
 	// write File
 	ofstream writeFileArray(arrayPath.data());
@@ -193,58 +280,12 @@ void generateSuffix(string refString, int* seqArray)
 	}
 }
 
-void sort(string tempSequence, int* seqArray, int n, int len)
-{
-	// bwt를 만들기 위해 sort하는 함수
-	// 계수정렬 사용
-
-	int countArr[4];
-	int tempSeq;
-	int* tempArr = new int[n];
-
-
-	for (int i = 0; i < 4; i++)
-		countArr[i] = 0; // 초기화
-	for (int i = 0; i < n; i++)
-	{
-		if (tempSequence[(len - n - 1) + seqArray[i]] == 'A')
-			countArr[0]++;
-		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'C')
-			countArr[1]++;
-		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'G')
-			countArr[2]++;
-		else
-			countArr[3]++;
-	}
-	for (int i = 1; i < 4; i++)
-		countArr[i] = countArr[i] + countArr[i - 1]; // 누적합
-	for (int i = 0; i < n; i++)
-	{
-		if (tempSequence[(len - n - 1) + seqArray[i]] == 'A')
-			tempSeq = 0;
-		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'C')
-			tempSeq = 1;
-		else if (tempSequence[(len - n - 1) + seqArray[i]] == 'G')
-			tempSeq = 2;
-		else
-			tempSeq = 3;
-
-		tempArr[n - countArr[tempSeq]] = seqArray[i];
-		countArr[tempSeq]--;
-	}
-
-	for (int i = 0; i < n; i++)
-		seqArray[i] = tempArr[i];
-
-	delete[] tempArr;
-}
-
 string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int* locationBWT)
 {
 	// 문자열을 복원하기 위한 함수
 
-	string refFilePath = "reference_1000000.txt";
-	string shortReadPath = "shortRead_30000.txt";
+	string refFilePath = "reference_500000.txt";
+	string shortReadPath = "shortRead_1000.txt";
 	string reference;
 	int check;
 
