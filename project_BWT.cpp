@@ -14,23 +14,28 @@ using namespace std;
 bool cmp(int i, int j);
 void constructSA();
 
-void inititial(string);
 string load(void);
-void generateSuffix(string, int*);
-void sort(int k, vector<int>& perm, vector<int>& group);
-void findSuffixArr(string& refString, int* seqArray);
-void reconstruct(string* s, int** suf, int len);
-void setBWT(char**, int*, int[][2], int*);
+void generateSuffix(string, int*, char*, char*);
+void sort(int k, vector<int>&, vector<int>&);
+void findSuffixArr(string&, int*);
+void reconstruct(string*, int**, int);
+int* setBWT(char**, int*, int[][2], int*);
 void setTable(char[][1000]);
 string reconstruct(char**, int*, int[][2], int, int*);
 string insertShortRead(string, string, int*, int);
-void printBWT(string, int*);
+void printBWT(string, int*, char*, char*);
 void calDiff(string);
 
 
 
 // 복원시킬 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 500000;
+int changeDataNum = 1000000;
+string bwtReal;
+string preBwtReal;
+
+string refFilePath = "reference_1000000.txt";
+string shortReadPath = "shortRead_300000.txt";
+string mySeqPath = "mySequence_snp_10.0.txt";
 
 
 int main(void)
@@ -40,21 +45,6 @@ int main(void)
 	start = time(NULL); // 시간 측정 시작
 
 	// -----------------------------------
-	// Only use test
-
-	//string refString = "ACAACG";
-
-	//refString.append(1, '$');
-	//inititial(S);
-
-	//S = "ACAACG$";
-	//constructSA();
-	//for (int i = 0; i < N; i++)
-	//	printf("%d ", sa[i]); 
-	// -----------------------------------
-
-
-	// -----------------------------------
 	// redy to algorithm
 
 	// use variable
@@ -62,16 +52,22 @@ int main(void)
 	int* seqArray;
 	int col = 50; // 열
 
+	char* front_suf;
+	char* end_suf;
+
+	//refString = "CTAGCATGGAC$";
 	refString = load();
 	seqArray = new int[refString.size()];
+	front_suf = new char[refString.size()];
+	end_suf = new char[refString.size()];
 	// -----------------------------------
 
 
 	// -----------------------------------
 	// create BWT, pre BWT, sequence array
 
-	generateSuffix(refString, seqArray);
-	printBWT(refString, seqArray);
+	generateSuffix(refString, seqArray, front_suf, end_suf);
+	printBWT(refString, seqArray, front_suf, end_suf);
 	// -----------------------------------
 
 
@@ -87,7 +83,7 @@ int main(void)
 	for (int i = 0; i < 2; i++)
 		bwt[i] = new char[changeDataNum];
 
-	setBWT(bwt, seqArray, table, locationBWT);
+	seqArray = setBWT(bwt, seqArray, table, locationBWT);
 	refString = reconstruct(bwt, seqArray, table, col, locationBWT);
 	calDiff(refString);
 	// -----------------------------------
@@ -163,7 +159,6 @@ void findSuffixArr(string& refString, int* seqArray)
 		group[i] = refString[i];
 	}
 
-	// 각 접미사를 첫 2, 4, 8, ... 글자를 기준으로 O(lg n)번 정렬한다.
 	for (int k = 1; k < len; k *= 2)
 	{
 		sort(k, perm, group); // 첫 [k ~ 2*k) 글자를 기준으로 정렬
@@ -191,30 +186,9 @@ void findSuffixArr(string& refString, int* seqArray)
 }
 
 
-
-
-
-void inititial(string s)
-{
-	// Only use test
-
-	string refFilePath = "BWT/sequence.txt";
-	int len = s.size();
-
-	// write File
-	ofstream writeFile(refFilePath.data());
-	if (writeFile.is_open()) {
-		for (int i = 0; i < len; i++)
-			writeFile << s[i];
-
-		writeFile.close();
-	}
-}
-
 string load(void)
 {
 	string line;
-	string refFilePath = "reference_500000.txt";
 
 	// read File
 	ifstream openFile(refFilePath.data());
@@ -228,7 +202,7 @@ string load(void)
 	return line;
 }
 
-void generateSuffix(string refString, int* seqArray)
+void generateSuffix(string refString, int* seqArray, char* front, char* end)
 {
 	// bwt를 만들기 위한 suffixes를 만드는 함수
 
@@ -239,53 +213,27 @@ void generateSuffix(string refString, int* seqArray)
 	int len = refString.size();
 
 
-	// Suffix 비슷한거 만드는 부분
-	cout << "Make Suffix" << endl;
 	for (int i = 0; i < len; i++)
 	{
-		// write File
-		ofstream writeFile(suffixPath.data(), ios::app);
-		if (writeFile.is_open()) {
-			if (i > 0)
-			{
-				writeFile << refString[i];
-				writeFile << refString[i - 1]; // BWT 저장
-			}
-			else
-			{
-				for (int j = i; j < len; j++)
-					writeFile << refString[j];
+		front[i] = refString[i];
 
-				writeFile << refString[len - 1]; // BWT 저장
-			}
-			writeFile << endl;
-			writeFile.close();
-		}
+		if (i)
+			end[i] = refString[i - 1];
+		else
+			end[i] = refString[len - 1];
 	}
-	cout << "Make Suffix Done" << endl;
 
 
+	cout << "Start Manber-Myers Algorithm" << endl;
 	findSuffixArr(refString, seqArray);
 
-	// write File
-	ofstream writeFileArray(arrayPath.data());
-	if (writeFileArray.is_open()) {
-		for (int j = 0; j < len; j++)
-		{
-			writeFileArray << seqArray[j];
-			writeFileArray << endl;
-		}
-
-		writeFileArray.close();
-	}
+	cout << "Manber-Myers Algorithm done" << endl;
 }
 
 string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int* locationBWT)
 {
 	// 문자열을 복원하기 위한 함수
 
-	string refFilePath = "reference_500000.txt";
-	string shortReadPath = "shortRead_1000.txt";
 	string reference;
 	int check;
 
@@ -489,110 +437,103 @@ string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int*
 	return reference;
 }
 
-void setBWT(char** bwt, int* seqArray, int table[][2], int* locationBWT)
+int* setBWT(char** bwt, int* seqArray, int table[][2], int* locationBWT)
 {
 	string arrayPath = "BWT/array.txt";
 	string BWTPath = "BWT/bwt.txt";
 	string PreBWTPath = "BWT/pre_bwt.txt";
 
+	int* seq = new int[bwtReal.size()];
 
-	cout << "File 읽기 시작" << endl;
-	// read array File
-	ifstream openFileArray(arrayPath.data());
-	if (openFileArray.is_open()) {
-		string line;
-		int con = changeDataNum;
-		while (getline(openFileArray, line))
+	int i;
+	int len = bwtReal.size();
+
+	int temp = 0;
+
+	int temp_0;
+	int temp_A;
+	int temp_C;
+	int temp_G;
+	int temp_T;
+
+
+	for (int j = len - 1; j >= 0; j--)
+		seq[j] = seqArray[len - 1 - j];
+	cout << "Array 정렬 완료" << endl;
+
+
+	for (i = 0; i < len; i++)
+	{
+		bwt[0][i] = preBwtReal[i];
+
+		if (i)
 		{
-			seqArray[con] = atoi(line.c_str());
-			con--;
-		}
-		openFileArray.close();
-	}
-	cout << "Array 읽기 완료" << endl;
-
-	// read pre BWT File
-	ifstream openFilePreBWT(PreBWTPath.data());
-	if (openFilePreBWT.is_open()) {
-		string line;
-		int con = 0;
-		int temp = 0;
-		while (getline(openFilePreBWT, line))
-		{
-			bwt[0][con] = line[0];
-
-			if (con)
+			if (bwt[0][i - 1] != bwt[0][i])
 			{
-				if (bwt[0][con - 1] != bwt[0][con])
+				// 각 문자의 시작과 마지막 위치 세팅
+
+				table[temp][0] = i;
+				if (temp < 5)
 				{
-					table[temp][0] = con;
-					if (temp < 5)
-					{
-						table[temp - 1][1] = con - 1;
-						temp++;
-					}
+					table[temp - 1][1] = i - 1;
+					temp++;
 				}
 			}
-			else
-			{
-				// table 초기 셋팅
-				// pre train의 첫 줄은 무조건 $ 임
-				table[temp][0] = 0;
-				temp++;
-			}
-			con++;
 		}
-		table[temp - 1][1] = con - 1;
-		openFilePreBWT.close();
-	}
-	cout << "BWT 읽기 완료" << endl;
-
-	// read BWT File
-	ifstream openFileBWT(BWTPath.data());
-	if (openFileBWT.is_open()) {
-		string line;
-		int con = 0;
-		int temp_0 = table[0][0];
-		int temp_A = table[1][0];
-		int temp_C = table[2][0];
-		int temp_G = table[3][0];
-		int temp_T = table[4][0];
-		while (getline(openFileBWT, line))
+		else
 		{
-			bwt[1][con] = line[0];
-
-			// 각 위치를 잡아주는 절
-			if (bwt[1][con] == '$')
-			{
-				locationBWT[con] = temp_0;
-				temp_0++;
-			}
-			else if (bwt[1][con] == 'A')
-			{
-				locationBWT[con] = temp_A;
-				temp_A++;
-			}
-			else if (bwt[1][con] == 'C')
-			{
-				locationBWT[con] = temp_C;
-				temp_C++;
-			}
-			else if (bwt[1][con] == 'G')
-			{
-				locationBWT[con] = temp_G;
-				temp_G++;
-			}
-			else
-			{
-				locationBWT[con] = temp_T;
-				temp_T++;
-			}
-
-			con++;
+			// table 초기 셋팅
+			// pre train의 첫 줄은 무조건 $ 임
+			table[temp][0] = 0;
+			temp++;
 		}
-		openFileBWT.close();
 	}
-	cout << "Pre BWT 읽기 완료" << endl;
+	table[temp - 1][1] = i - 1;
+	cout << "Pre BWT 위치 테이블1 완료" << endl;
+
+
+	temp_0 = table[0][0];
+	temp_A = table[1][0];
+	temp_C = table[2][0];
+	temp_G = table[3][0];
+	temp_T = table[4][0];
+
+	for (int j = 0; j < len; j++)
+	{
+		bwt[1][j] = bwtReal[j];
+
+		// 각 위치를 잡아주는 절
+		if (bwt[1][j] == '$')
+		{
+			locationBWT[j] = temp_0;
+			temp_0++;
+		}
+		else if (bwt[1][j] == 'A')
+		{
+			locationBWT[j] = temp_A;
+			temp_A++;
+		}
+		else if (bwt[1][j] == 'C')
+		{
+			locationBWT[j] = temp_C;
+			temp_C++;
+		}
+		else if (bwt[1][j] == 'G')
+		{
+			locationBWT[j] = temp_G;
+			temp_G++;
+		}
+		else
+		{
+			locationBWT[j] = temp_T;
+			temp_T++;
+		}
+	}
+	cout << "BWT 테이블 셋 완료" << endl;
+
+	delete[] seqArray;
+
+	return seq;
 }
 
 
@@ -619,78 +560,24 @@ string insertShortRead(string reference, string shortRd, int* seqArray, int succ
 }
 
 
-void printBWT(string tempSequence, int* seqArray)
+void printBWT(string tempSequence, int* seqArray, char* front, char* end)
 {
 	// BWT를 save하는 함수
 	int len = tempSequence.size();
 
-	string bwt;
-	string preBwt;
-	string suffixPath = "BWT/suffix.txt";
-	string arrayPath = "BWT/array.txt";
-	string BWTPath = "BWT/bwt.txt";
-	string PreBWTPath = "BWT/pre_bwt.txt";
 
-	// read File
-	ifstream openArrayFile(arrayPath.data());
-	if (openArrayFile.is_open()) {
-		string line;
-		int con = 0;
-		while (getline(openArrayFile, line))
-		{
-			seqArray[con] = atoi(line.c_str());
-			con++;
-		}
-		openArrayFile.close();
+	for (int i = len - 1; i >= 0; i--)
+	{
+		bwtReal.append(1, end[seqArray[i]]);
+		preBwtReal.append(1, front[seqArray[i]]);
 	}
 
-	// read File
-	ifstream openFile(suffixPath.data());
-	if (openFile.is_open()) {
-		string line;
-		int con = 0;
-		while (getline(openFile, line))
-		{
-			if (con == 0)
-			{
-				bwt.append(1, line[len - con]);
-				preBwt.append(1, line[0]);
-				con++;
-			}
-			else
-			{
-				bwt.append(1, line[1]);
-				preBwt.append(1, line[0]);
-			}
-		}
-		openFile.close();
-	}
-
-	// write BWT File
-	ofstream writeBWT(BWTPath.data());
-	if (writeBWT.is_open()) {
-		for (int i = len - 1; i >= 0; i--)
-		{
-			writeBWT << bwt[seqArray[i]];
-			writeBWT << endl;
-		}
-		writeBWT.close();
-	}
-	// write PreBWT File
-	ofstream writeSufPreBWT(PreBWTPath.data(), ios::app);
-	if (writeSufPreBWT.is_open()) {
-		for (int i = len - 1; i >= 0; i--)
-		{
-			writeSufPreBWT << preBwt[seqArray[i]];
-			writeSufPreBWT << endl;
-		}
-		writeSufPreBWT.close();
-	}
+	delete[] front;
+	delete[] end;
 }
 
 void calDiff(string reference)
 {
-	string mySeqPath = "mySequence_snp_10.0.txt";
 	string myDNAPath = "BWT/Reconstruction.txt";
 	string mySeq;
 
