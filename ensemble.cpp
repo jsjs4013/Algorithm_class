@@ -8,7 +8,7 @@ using namespace std;
 // 여기서 레퍼런스 파일의 길이를 입력
 int len = 1000;
 string myDNAPath = "Mydna_1000.txt";
-string votPath = "repair_dna_1000_ensemble";
+string votPath = "repair_dna_1000_ensemble.txt";
 
 void priority(string s, int index, const int num, int& aNum, int& tNum, int& cNum, int& gNum, int& aVote, int& tVote, int& cVote, int& gVote);
 void tied1(int num1, int num2, int& finalNum);
