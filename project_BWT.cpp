@@ -18,7 +18,6 @@ string load(void);
 void generateSuffix(string, int*, char*, char*);
 void sort(int k, vector<int>&, vector<int>&);
 void findSuffixArr(string&, int*);
-void reconstruct(string*, int**, int);
 int* setBWT(char**, int*, int[][2], int*);
 void setTable(char[][1000]);
 string reconstruct(char**, int*, int[][2], int, int*);
@@ -28,14 +27,12 @@ void calDiff(string);
 
 
 
-// 복원시킬 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 1000000;
 string bwtReal;
 string preBwtReal;
 
-string refFilePath = "reference_1000000.txt";
-string shortReadPath = "shortRead_300000.txt";
-string mySeqPath = "mySequence_snp_10.0.txt";
+string refFilePath = "test_ref_1000.txt";
+string shortReadPath = "shortread_1000.txt";
+string mySeqPath = "Mydna_1000.txt";
 
 
 int main(void)
@@ -50,7 +47,7 @@ int main(void)
 	// use variable
 	string refString;
 	int* seqArray;
-	int col = 50; // 열
+	int col = 0; // 열
 
 	char* front_suf;
 	char* end_suf;
@@ -78,10 +75,10 @@ int main(void)
 	cout << "Matching srtart" << endl;
 
 	int table[5][2];
-	int* locationBWT = new int[changeDataNum];
+	int* locationBWT = new int[refString.size()];
 	char** bwt = new char* [2];
 	for (int i = 0; i < 2; i++)
-		bwt[i] = new char[changeDataNum];
+		bwt[i] = new char[refString.size()];
 
 	seqArray = setBWT(bwt, seqArray, table, locationBWT);
 	refString = reconstruct(bwt, seqArray, table, col, locationBWT);
@@ -101,22 +98,22 @@ int main(void)
 
 
 
-void sort(int k, vector<int>& perm, vector<int>& group)
+void sort(int k, vector<int>& suffixRank, vector<int>& tempRank)
 {
-	// 첫 k 글자를 기준으로 매겨진 group 번호를 이용하여 접미사 배열을 계수 정렬한다.
+	// 첫 k 글자를 기준으로 매겨진 tempRank 번호를 이용하여 접미사 배열을 계수 정렬한다.
 
-	int n = perm.size();
+	int n = suffixRank.size();
 
-	// 계수 정렬시 사용하는 bucket의 범위
-	// 첫 group 번호는 문자의 아스키 코드를 이용하므로 char의 최댓값을 담을 수 있어야 하고,
-	// 그 이후에는 0번부터 최대 n-1까지 매겨질 수 있으므로 이에 맞게 range를 잡는다.
+	// 계수 정렬시 사용하는 범위
+	// 첫 tempRank 번호는 문자의 아스키 코드를 이용
+	// 그 이후에는 0번부터 최대 n-1 알맞게 range를 잡음
 	int range = max(n, (int)numeric_limits<char>::max());
 
 	vector<int> cnt(range + 1, 0);
 	for (int i = 0; i < n; i++)
 	{
 		if (i + k < n)
-			cnt[group[i + k]]++;
+			cnt[tempRank[i + k]]++;
 		else
 			cnt[0]++;
 	}
@@ -126,63 +123,61 @@ void sort(int k, vector<int>& perm, vector<int>& group)
 		cnt[i] += cnt[i - 1];
 	}
 
-	vector<int> newPerm(n);
+	vector<int> newSuffixRank(n);
 	for (int i = n - 1; i >= 0; i--)
 	{
-		if (perm[i] + k < n)
-			newPerm[--cnt[group[perm[i] + k]]] = perm[i];
+		if (suffixRank[i] + k < n)
+			newSuffixRank[--cnt[tempRank[suffixRank[i] + k]]] = suffixRank[i];
 		else
-			newPerm[--cnt[0]] = perm[i];
+			newSuffixRank[--cnt[0]] = suffixRank[i];
 	}
-	swap(perm, newPerm);
+	swap(suffixRank, newSuffixRank);
 }
 
 
 void findSuffixArr(string& refString, int* seqArray)
 {
-	// 문자열 s의 접미사 배열을 반환함
+	// 문자열 의 suffix array를 구하는 함수
 
 	int len = refString.size();
 
-	// 접미사 배열, 각 접미사의 시작 위치를 저장하는 순열로 볼 수 있다.
-	vector<int> perm(len);
+	vector<int> suffixRank(len);
 	for (int i = 0; i < len; i++)
 	{
-		perm[i] = i;
+		suffixRank[i] = i;
 	}
 
-	// 각 접미사들의 첫 k 글자를 기준으로 매겨진 group 번호
-	// 첫 k 글자가 사전상 앞에 있을 수록 상대적으로 낮은 번호를 부여한다.
-	vector<int> group(len + 1);
+	vector<int> tempRank(len + 1);
 	for (int i = 0; i < len; i++)
 	{
-		group[i] = refString[i];
+		tempRank[i] = refString[i];
 	}
 
 	for (int k = 1; k < len; k *= 2)
 	{
-		sort(k, perm, group); // 첫 [k ~ 2*k) 글자를 기준으로 정렬
-		sort(0, perm, group); // 첫 [0 ~ k) 글자를 기준으로 정렬
+		sort(k, suffixRank, tempRank);
+		sort(0, suffixRank, tempRank);
 
-		// group 번호를 갱신한다.
-		vector<int> newGroup(len + 1); // 새 group 번호 (임시 배열)
-		newGroup[perm[0]] = 0;
+		// tempRank 번호를 갱신
+		vector<int> newTempRank(len + 1);
+		newTempRank[suffixRank[0]] = 0;
 		for (int i = 1; i < len; i++)
 		{
-			if (group[perm[i]] == group[perm[i - 1]] && group[perm[i] + k] == group[perm[i - 1] + k])
-				newGroup[perm[i]] = newGroup[perm[i - 1]];
+			if (tempRank[suffixRank[i]] == tempRank[suffixRank[i - 1]] && tempRank[suffixRank[i] + k] == tempRank[suffixRank[i - 1] + k])
+				newTempRank[suffixRank[i]] = newTempRank[suffixRank[i - 1]];
 			else
-				newGroup[perm[i]] = newGroup[perm[i - 1]] + 1;
+				newTempRank[suffixRank[i]] = newTempRank[suffixRank[i - 1]] + 1;
 		}
 
-		swap(group, newGroup);
+		swap(tempRank, newTempRank);
 
-		if (group[perm[len - 1]] == len - 1) break; // 최적화
+		if (tempRank[suffixRank[len - 1]] == len - 1)
+			break;
 	}
 
 
 	for (int i = len - 1; i >= 0; i--)
-		seqArray[i] = perm[len - 1 - i];
+		seqArray[i] = suffixRank[len - 1 - i];
 }
 
 
@@ -258,6 +253,8 @@ string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int*
 			int frontNext = -1;
 			int endNext = -1;
 			int missmatch[2] = { 0, 0 };
+
+			shortLen = line.size();
 
 
 			if (line[shortLen - 1] == '$')
@@ -439,10 +436,6 @@ string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int*
 
 int* setBWT(char** bwt, int* seqArray, int table[][2], int* locationBWT)
 {
-	string arrayPath = "BWT/array.txt";
-	string BWTPath = "BWT/bwt.txt";
-	string PreBWTPath = "BWT/pre_bwt.txt";
-
 	int* seq = new int[bwtReal.size()];
 
 	int i;
@@ -578,7 +571,7 @@ void printBWT(string tempSequence, int* seqArray, char* front, char* end)
 
 void calDiff(string reference)
 {
-	string myDNAPath = "BWT/Reconstruction.txt";
+	string myDNAPath = "BWT/repair_dna_1000.txt";
 	string mySeq;
 
 	int count = 0;

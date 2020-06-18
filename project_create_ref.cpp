@@ -12,7 +12,7 @@ void makeSReadFile(char*, char*, int, int);
 void compareDiff(char*, char*);
 
 // 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 100000;
+int changeDataNum = 1000;
 
 int main(void)
 {
@@ -29,8 +29,8 @@ int main(void)
 	cin >> n;
 	*/
 
-	l = 1000; // 열
-	m = 1000; // 행
+	l = 50; // 열
+	m = 100; // 행
 
 	makeRefFile(reference);
 	makeSReadFile(mySeq, reference, l, m);
@@ -47,7 +47,7 @@ void makeRefFile(char* reference)
 	int temp;
 	char tempList[3]; // 연속한 값을 확인하기 위한 변수
 	int count = 0;
-	string refFilePath = "reference_test.txt";
+	string refFilePath = "test_ref_1000.txt";
 
 
 	srand((unsigned int)time(NULL));
@@ -161,9 +161,9 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 	int temp;
 	int check = 1;
 	int* tempList = new int[changeDataNum]; // 이미 한 번 이상 조회했는지 알려주는 변수
-	string refFilePath = "reference.txt";
-	string shortRdFilePath = "shortRead_test.txt";
-	string originFilePath = "mySequence_snp_1.0_test.txt";
+	string refFilePath = "test_ref_1000.txt";
+	string shortRdFilePath = "shortread_1000.txt";
+	string originFilePath = "Mydna_1000.txt";
 
 	char** tempMySeq; // 파일에 쓸 때 사용하는 변수
 	tempMySeq = new char* [m];
@@ -174,6 +174,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 	for (int i = 0; i < changeDataNum; i++)
 		tempList[i] = 0;
 
+
 	/*
 	// read File
 	ifstream openFile(refFilePath.data());
@@ -182,8 +183,8 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 		while (getline(openFile, line))
 			openFile.close();
 		strcpy(reference, line.c_str());
-	}*/
-	/*
+	}
+
 	ifstream openFile2(originFilePath.data());
 	if (openFile2.is_open()) {
 		string line;
@@ -200,7 +201,7 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 		// 바뀐 염기서열은 my DNA의 염기서열로 들어감
 
 		int num = rand();
-		temp = (int)num % 1000; // 확률 계산을 위해 랜덤 값 생성
+		temp = (int)num % 100; // 확률 계산을 위해 랜덤 값 생성
 
 		if (temp < 10)
 		{
@@ -288,8 +289,8 @@ void makeSReadFile(char* mySeq, char* reference, int l, int m)
 
 void compareDiff(char* ref, char* mySeq)
 {
-	string refFilePath = "reference_test.txt";
-	string originFilePath = "shortRead_test.txt";
+	string refFilePath = "test_ref_1000.txt";
+	string originFilePath = "shortread_1000.txt";
 	int count = 0;
 
 
