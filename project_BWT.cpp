@@ -20,7 +20,7 @@ void sort(int k, vector<int>&, vector<int>&);
 void findSuffixArr(string&, int*);
 int* setBWT(char**, int*, int[][2], int*);
 void setTable(char[][1000]);
-string reconstruct(char**, int*, int[][2], int, int*);
+string reconstruct(string, char**, int*, int[][2], int, int*);
 string insertShortRead(string, string, int*, int);
 void printBWT(string, int*, char*, char*);
 void calDiff(string);
@@ -81,7 +81,7 @@ int main(void)
 		bwt[i] = new char[refString.size()];
 
 	seqArray = setBWT(bwt, seqArray, table, locationBWT);
-	refString = reconstruct(bwt, seqArray, table, col, locationBWT);
+	refString = reconstruct(refString, bwt, seqArray, table, col, locationBWT);
 	calDiff(refString);
 	// -----------------------------------
 
@@ -225,19 +225,11 @@ void generateSuffix(string refString, int* seqArray, char* front, char* end)
 	cout << "Manber-Myers Algorithm done" << endl;
 }
 
-string reconstruct(char** bwt, int* seqArray, int table[][2], int shortLen, int* locationBWT)
+string reconstruct(string reference, char** bwt, int* seqArray, int table[][2], int shortLen, int* locationBWT)
 {
 	// 문자열을 복원하기 위한 함수
 
-	string reference;
 	int check;
-
-	// read reference File
-	ifstream openFile(refFilePath.data());
-	if (openFile.is_open()) {
-		while (getline(openFile, reference));
-		openFile.close();
-	}
 
 
 	// read shortRead File
