@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int len = 100000;
+int len = 1000;
 string myDNAPath = "Mydna_1000";
 string votPath = "repair_dna_1000_ensemble";
 
