@@ -208,6 +208,7 @@ void generateSuffix(string refString, int* seqArray, char* front, char* end)
 	int len = refString.size();
 
 
+	// BWT와 Pre BWT 복원 시 필요한 문자를 셋
 	for (int i = 0; i < len; i++)
 	{
 		front[i] = refString[i];
