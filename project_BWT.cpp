@@ -569,6 +569,9 @@ void calDiff(string reference)
 
 	int count = 0;
 
+	// 마지막 $ 문자 제거
+	reference = reference.substr(0, reference.size() - 1);
+
 	// read File
 	ifstream openFile(mySeqPath.data());
 	if (openFile.is_open()) {
