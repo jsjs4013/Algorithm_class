@@ -563,7 +563,7 @@ void printBWT(string tempSequence, int* seqArray, char* front, char* end)
 
 void calDiff(string reference)
 {
-	string myDNAPath = "BWT/repair_dna_1000.txt";
+	string myDNAPath = "repair_dna_1000.txt";
 	string mySeq;
 
 	int count = 0;
