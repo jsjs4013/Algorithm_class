@@ -100,7 +100,7 @@ int main(void)
 
 void sort(int k, vector<int>& suffixRank, vector<int>& tempRank)
 {
-	// 첫 k 글자를 기준으로 매겨진 tempRank 번호를 이용하여 접미사 배열을 계수 정렬한다.
+	// 계수 정렬 함수
 
 	int n = suffixRank.size();
 
