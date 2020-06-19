@@ -34,6 +34,8 @@ string refFilePath = "test_ref_1000.txt";
 string shortReadPath = "shortread_1000.txt";
 string mySeqPath = "Mydna_1000.txt";
 
+int threshold = 3 + 1;
+
 
 int main(void)
 {
@@ -307,7 +309,7 @@ string reconstruct(string reference, char** bwt, int* seqArray, int table[][2], 
 								{
 									missmatch[0]++;
 
-									if (missmatch[0] > 3)
+									if (missmatch[0] > threshold)
 									{
 										// miss match 개수 3개까지 허용함
 
@@ -381,7 +383,7 @@ string reconstruct(string reference, char** bwt, int* seqArray, int table[][2], 
 								{
 									missmatch[1]++;
 
-									if (missmatch[1] > 3)
+									if (missmatch[1] > threshold)
 									{
 										// miss match 개수 3개까지 허용함
 
