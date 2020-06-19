@@ -6,7 +6,7 @@
 using namespace std;
 
 // 여기서 레퍼런스 파일의 길이를 입력
-int len = 1000;
+int len;
 string myDNAPath = "Mydna_1000.txt";
 string votPath = "repair_dna_1000_ensemble.txt";
 
@@ -36,7 +36,7 @@ int main() {
     }
     ifstream denovoFile("repair_dna_1000_denovo.txt");
     if (denovoFile.fail()) {
-        cout << "KMP 파일을 읽어들이는 데 실패했습니다.\n";
+        cout << "Denovo 파일을 읽어들이는 데 실패했습니다.\n";
         return 1;
     } // 파일을 받는다.
 
@@ -53,6 +53,8 @@ int main() {
     if (denovoFile.is_open()) {
         denovoFile >> denovoDNA;
     } // 선언한 각각의 문자열에 저장
+
+    len = bwtDNA.size();
 
     int tmp = denovoDNA.length();
     if (denovoDNA.length() <= len) { // Denovo로 복원한 My DNA가 다른 것들보다 적다면 길이가 같아질 때까지 임의의 문자로 채워넣음. if (denovoDNA.length() <= [문자열의 길이])로 수정
