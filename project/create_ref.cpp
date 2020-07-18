@@ -1,5 +1,3 @@
-// 2014112022, 문주원
-
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -12,7 +10,7 @@ void makeSReadFile(char*, char*, int, int);
 void compareDiff(char*, char*);
 
 // 데이터 개수를 바꾸고 싶을 때 이곳을 바꿈
-int changeDataNum = 1000;
+int changeDataNum = 12345;
 
 int main(void)
 {
@@ -29,8 +27,8 @@ int main(void)
 	cin >> n;
 	*/
 
-	l = 50; // 열
-	m = 100; // 행
+	l = 59; // 열
+	m = 1349; // 행
 
 	makeRefFile(reference);
 	makeSReadFile(mySeq, reference, l, m);

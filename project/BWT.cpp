@@ -1,5 +1,3 @@
-// 2014112022, ╧╝аж©Ь
-
 #include <iostream>
 #include <string>
 #include <fstream>
